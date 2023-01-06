@@ -67,7 +67,6 @@ contract TestBetting {
         oracle.setWinner(1);
         Assert.isFalse(better1.makeBet(10 wei, 1), "Bet should not be placed after match is finished.");
     }
-    event Print(uint message);
 
     function testClaimingBets() public { // test claiming while threshold is not crossed.
         payable(betting).transfer(marketInitialBalance);
@@ -150,7 +149,6 @@ contract TestBetting {
         Assert.isFalse(better1.makeBet(10 wei, 1), "Better should not be able to place bet if match is suspended.");
 
     }
-
     function testRefundingNotSuspended() public { // test claiming suspended bets if the match is not suspended
         payable(betting).transfer(marketInitialBalance);
         require(better1.makeBet(90 wei, 1), "Better must be able to bet");
@@ -185,7 +183,7 @@ contract TestBetting {
         require(better2.makeBet(40 wei, 1), "Better must be able to bet");
         oracle.setWinner(1);
         Assert.isTrue(better1.claimWinningBets(), "Better should be able to claim winning bets if he won.");
-        Assert.isFalse(bettingMaker.claimLosingBets(), "Better should be able to claim losing bets ONLY if everybody else collected it.");
+        Assert.isFalse(bettingMaker.claimLosingBets(), "Bet maker should be able to claim losing bets ONLY if everybody else collected it.");
     }
 
     function testClaimingLosingBetsByBetter() public {

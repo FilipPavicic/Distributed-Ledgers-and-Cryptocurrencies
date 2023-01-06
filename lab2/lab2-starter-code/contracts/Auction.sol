@@ -36,6 +36,13 @@ contract Auction {
         timer = _timer;
         judgeAddress = _judgeAddress;
         sellerAddress = _sellerAddress;
+        /// In Solidity, address(0) is the null address. 
+        ///It is a special address that is used to represent an uninitialized address or a missing address value.
+        /// It is equivalent to 0x0000000000000000000000000000000000000000.
+
+        ///The null address does not correspond to any account and any attempt to send a transaction to it will fail.
+        /// It is commonly used as a placeholder for addresses that are expected to be set later, 
+        ///or to represent the absence of an address value.
         if (sellerAddress == address(0)) {
             sellerAddress = msg.sender;
         }
@@ -77,16 +84,30 @@ contract Auction {
     /// the transfer of fonds to the seller. If the judge is specified,
     /// then only the judge or highest bidder can transfer the funds to the seller.
     function finalize() public {
-        // TODO Your code here
-        revert("Not yet implemented");
+        require(outcome == Outcome.SUCCESSFUL, "Auction must be successful to finalize");
+        require(highestBidderAddress != address(0), "Highest bidder must be set to finalize auction");
+
+        // Check if a judge is defined and if so, only allow the judge or the highest bidder to finalize the auction
+        if (judgeAddress != address(0)) {
+            require(msg.sender == judgeAddress || msg.sender == highestBidderAddress, "Only the judge or highest bidder can finalize the auction");
+        }
+
+        payable(sellerAddress).transfer(address(this).balance);
     }
 
     // If a judge is specified, this can ONLY be called by seller or the judge.
     // Otherwise, anybody can request refund to the highest bidder.
     // Money can only be refunded to the highest bidder.
     function refund() public {
-        // TODO Your code here
-        revert("Not yet implemented");
+        require(outcome == Outcome.NOT_SUCCESSFUL, "Auction must not be successful to refund");
+        require(highestBidderAddress != address(0), "Highest bidder must be set to refund");
+
+        // Check if a judge is defined and if so, only allow the judge or the seller to refund the highest bidder
+        if (judgeAddress != address(0)) {
+            require(msg.sender == judgeAddress || msg.sender == sellerAddress, "Only the judge or seller can refund the highest bidder");
+        }
+
+        payable(highestBidderAddress).transfer(address(this).balance);
     }
 
     // This is provided for testing

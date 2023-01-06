@@ -41,12 +41,24 @@ contract DutchAuction is Auction {
     /// bid that is higher than the current prices.
     /// This method should be only called while the auction is active.
     function bid() public payable {
-        // TODO Your code here
-        revert("Not yet implemented");
+        require(time() <= auctionEnd, "Auction has ended");
+        require(highestBidderAddress == address(0), "Someone already won this auction.");
+        uint currentPrice = initialPrice - (time() - auctionStart) * priceDecrement;
+        require(msg.value >= currentPrice, "Bid must be equal to or greater than current price");
+
+        // End the auction successfully and transfer funds to seller
+        finishAuction(Auction.Outcome.SUCCESSFUL, msg.sender);
+        // Transfer any excess funds back to the bidder
+        payable(msg.sender).transfer(msg.value - currentPrice);
     }
 
     function enableRefunds() public {
-        // TODO Your code here
-        revert("Not yet implemented");
+        // Check if the auction has ended
+        if (time() > auctionEnd) {
+            // If the auction has ended and no bids were placed, set the outcome to NOT_SUCCESSFUL
+            if (highestBidderAddress == address(0)) {
+                finishAuction(Auction.Outcome.NOT_SUCCESSFUL, address(0));
+            }
+        }
     }
 }

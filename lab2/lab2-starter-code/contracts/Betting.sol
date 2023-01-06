@@ -111,14 +111,14 @@ contract Betting {
             if (msg.sender == bets[i].bettor) {
                 balances[msg.sender] -= bets[i].amount;
                 if (oracle.getWinner() == bets[i].player_id) {
-                    balances[msg.sender] += bets[i].amount * bets[i].betCoef / 100;  
+                    balances[msg.sender] += bets[i].amount * bets[i].betCoef / 100;
+                    bets[i].amount = 0;
                     //emit PrintBalance("Unutar claimWinningBets, sada vratimo duplo, ocekivano 60", balances[msg.sender]);  
-                }
-                bets[i].amount = 0;    
+                }    
             }
         }
 
-        payable(msg.sender).transfer(balances[msg.sender]);
+        payable(msg.sender).transfer(balances[msg.sender]); //
     }
 
 
@@ -126,16 +126,25 @@ contract Betting {
 
         require(suspended == false, 'Betting is suspended');
         require(oracle.getWinner() != 0, "Match is not over");
+        require(msg.sender == betMaker, "Only bet maker can claim losing bets.");
 
         uint totalLossBetsAmount = 0;
 
+        bool allWinningBettorsClaimedWinningBets = true;
+
         for (uint i = 0; i < bets.length; i++) {
+            if (oracle.getWinner() == bets[i].player_id) {
+                if (bets[i].amount != 0) {
+                    allWinningBettorsClaimedWinningBets = false;
+                    require(allWinningBettorsClaimedWinningBets == true, "Bet maker should be able to claim losing bets only if everybody else collected their winning bets.");
+                }
+            }
             if (oracle.getWinner() != bets[i].player_id) {
                 totalLossBetsAmount += bets[i].amount;
                 bets[i].amount = 0;
             }
         }
 
-        payable(betMaker).transfer(totalLossBetsAmount);
+        payable(betMaker).transfer(address(this).balance);
     }
 }
